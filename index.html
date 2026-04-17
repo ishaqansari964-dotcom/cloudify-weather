@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cloudify Weather App</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: 0.5s;
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
+}
+
+.container {
+  text-align: center;
+  color: white;
+  width: 320px;
+}
+
+h1 {
+  font-size: 30px;
+  font-weight: 600;
+}
+
+.tagline {
+  font-size: 13px;
+  opacity: 0.8;
+  margin-bottom: 20px;
+}
+
+.search-box {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+input {
+  padding: 12px;
+  width: 70%;
+  border: none;
+  border-radius: 25px 0 0 25px;
+  outline: none;
+}
+
+button {
+  padding: 12px;
+  border: none;
+  border-radius: 0 25px 25px 0;
+  background: #ffcc00;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover {
+  background: #ffdb4d;
+}
+
+.card {
+  display: none;
+  background: rgba(255,255,255,0.15);
+  padding: 25px;
+  border-radius: 25px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {opacity: 0; transform: translateY(20px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+
+.temp {
+  font-size: 55px;
+  font-weight: bold;
+}
+
+.details {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.loader {
+  border: 4px solid rgba(255,255,255,0.3);
+  border-top: 4px solid white;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  margin: 10px auto;
+  animation: spin 1s linear infinite;
+  display: none;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+#error {
+  color: #ffcccb;
+  margin-top: 10px;
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+  <h1>☁ Cloudify</h1>
+  <p class="tagline">Smart Weather at Your Fingertips</p>
+
+  <div class="search-box">
+    <input type="text" id="cityInput" placeholder="Enter city...">
+    <button onclick="getWeather()">🔍</button>
+  </div>
+
+  <div class="loader" id="loader"></div>
+  <p id="error"></p>
+
+  <div class="card" id="card">
+    <h2 id="city"></h2>
+    <p id="date"></p>
+    <img id="icon">
+    <div class="temp" id="temp"></div>
+    <p id="condition"></p>
+
+    <div class="details">
+      <div>💧 <span id="humidity"></span></div>
+      <div>🌬 <span id="wind"></span></div>
+    </div>
+
+    <div class="details">
+      <div>⬇ <span id="min"></span></div>
+      <div>⬆ <span id="max"></span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const apiKey = "YOUR_API_KEY"; // apni API key yahan lagao
+
+const input = document.getElementById("cityInput");
+const loader = document.getElementById("loader");
+const error = document.getElementById("error");
+
+async function getWeather() {
+  const city = input.value.trim();
+  if (!city) return;
+
+  loader.style.display = "block";
+  error.innerText = "";
+  document.getElementById("card").style.display = "none";
+
+  try {
+    const res = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`
+    );
+
+    if (!res.ok) throw new Error();
+
+    const data = await res.json();
+
+    document.getElementById("city").innerText = data.name;
+    document.getElementById("temp").innerText = Math.round(data.main.temp) + "°C";
+    document.getElementById("condition").innerText = data.weather[0].main;
+    document.getElementById("humidity").innerText = data.main.humidity + "%";
+    document.getElementById("wind").innerText = data.wind.speed + " km/h";
+    document.getElementById("min").innerText = data.main.temp_min + "°C";
+    document.getElementById("max").innerText = data.main.temp_max + "°C";
+
+    document.getElementById("icon").src =
+      `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+
+    const now = new Date();
+    document.getElementById("date").innerText = now.toLocaleString();
+
+    changeBackground(data.weather[0].main);
+
+    loader.style.display = "none";
+    document.getElementById("card").style.display = "block";
+    input.value = "";
+
+  } catch {
+    loader.style.display = "none";
+    error.innerText = "City not found ❌";
+  }
+}
+
+input.addEventListener("keypress", e => {
+  if (e.key === "Enter") getWeather();
+});
+
+function changeBackground(weather) {
+  if (weather.includes("Cloud")) {
+    document.body.style.background = "linear-gradient(135deg, #757f9a, #d7dde8)";
+  } else if (weather.includes("Rain")) {
+    document.body.style.background = "linear-gradient(135deg, #314755, #26a0da)";
+  } else if (weather.includes("Clear")) {
+    document.body.style.background = "linear-gradient(135deg, #f7971e, #ffd200)";
+  } else {
+    document.body.style.background = "linear-gradient(135deg, #1e3c72, #2a5298)";
+  }
+}
+</script>
+
+</body>
+</html>
